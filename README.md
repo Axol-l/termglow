@@ -28,7 +28,7 @@
 
 ```bash
 # Clone
-git clone https://github.com/YOUR_USERNAME/termglow
+git clone https://github.com/Axol-l/termglow
 cd termglow
 
 # Run directly (no install needed!)
