@@ -26,9 +26,7 @@ def show_menu():
 
     width, height = 80, 24
     try:
-        import os as _os
-        w = os.get_terminal_size()[0]
-        height = os.get_terminal_size()[1]
+        width, height = os.get_terminal_size()
     except Exception:
         pass
 
@@ -48,13 +46,12 @@ def show_menu():
     def draw():
         nonlocal width, height
         try:
-            import os as _os
             width, height = os.get_terminal_size()
         except Exception:
             pass
 
         out = [CURSOR_HIDE]
-        py = height // 2 - len(keys) - 3
+        py = max(0, height // 2 - len(keys) - 4)
 
         logo = [
             r" _____                    ____ _",
@@ -63,8 +60,8 @@ def show_menu():
             r"  | |  __/ |  | | | | | | |_| | | (_) \ V  V /",
             r"  |_|\___|_|  |_| |_| |_|\____|_|\___/ \_/\_/",
             "",
-            "  Terminal Visual Effects Engine v1.0",
-            "  \u2191/\u2193 navigate  \u21B5 select  q quit",
+            "  Terminal Visual Effects Engine v2.0",
+            "  arrow keys: navigate   enter: select   q/esc: quit",
         ]
 
         for i, line in enumerate(logo):
@@ -99,21 +96,26 @@ def show_menu():
 
     while True:
         ch = _getch()
-        if ch == b"q" or ch == b"\x1b":
+        ch_lower = ch.lower() if isinstance(ch, bytes) else ch
+
+        if ch in (b"q", b"Q", b"\x1b"):
             break
-        if ch == b"\r" or ch == b"\n":
+
+        if ch in (b"\r", b"\n"):
             _cleanup_menu()
             return keys[selected]
-        if (os.name == "nt" and ch == b"\xe0") or ch == b"\x1b":
-            if os.name == "nt" and ch == b"\xe0":
-                ch2 = _getch()
-            else:
-                ch2 = _getch()
 
-            if ch2 == b"H" or ch2 == b"A":  # Up
-                selected = (selected - 1) % len(keys)
-            elif ch2 == b"P" or ch2 == b"B":  # Down
-                selected = (selected + 1) % len(keys)
+        if (os.name == "nt" and ch == b"\xe0"):
+            ch2 = _getch()
+            if ch2 == b"H":      selected = (selected - 1) % len(keys)
+            elif ch2 == b"P":    selected = (selected + 1) % len(keys)
+        elif os.name != "nt" and ch == b"\x1b":
+            ch2 = _getch()
+            if ch2 == b"[":
+                ch3 = _getch()
+                if ch3 == b"A":      selected = (selected - 1) % len(keys)
+                elif ch3 == b"B":    selected = (selected + 1) % len(keys)
+
         draw()
 
     _cleanup_menu()
@@ -122,9 +124,9 @@ def show_menu():
 
 def _cleanup_menu():
     sys.stdout.write(reset())
-    sys.stdout.write(CLEAR_SCREEN)
     sys.stdout.write(CURSOR_SHOW)
     sys.stdout.write(ALT_BUFFER_OFF)
+    sys.stdout.write(CLEAR_SCREEN)
     sys.stdout.flush()
 
 
